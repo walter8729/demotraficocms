@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tráfico en vivo · masencarnacion</title>
+<style>
+*{box-sizing:border-box}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f2ec;--card:#fff;--tx:#1f1e1c;--mut:#6b6a64;--ln:#c9c7bd;--land:#e2e0d5;--cf:#FAECE7;--cfs:#993C1D;--org:#EEEDFE;--orgs:#534AB7;--gry:#F1EFE8;--grys:#888780}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--card:#222220;--tx:#ece9df;--mut:#a3a198;--ln:#4a4944;--land:#33322e;--cf:#4A1B0C;--cfs:#F0997B;--org:#26215C;--orgs:#AFA9EC;--gry:#2C2C2A;--grys:#888780}}
+:root[data-theme="dark"]{--bg:#171716;--card:#222220;--tx:#ece9df;--mut:#a3a198;--ln:#4a4944;--land:#33322e;--cf:#4A1B0C;--cfs:#F0997B;--org:#26215C;--orgs:#AFA9EC;--gry:#2C2C2A;--grys:#888780}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1040px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:20px;font-weight:500;margin:0}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:6px 14px;cursor:pointer}
+button:focus-visible{outline:2px solid #378ADD;outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px;margin-bottom:12px}
+svg{display:block;width:100%;height:auto}
+.land{fill:var(--land);stroke:var(--ln);stroke-width:.6}
+.box{stroke-width:1}.cf{fill:var(--cf);stroke:var(--cfs)}.org{fill:var(--org);stroke:var(--orgs)}.gry{fill:var(--gry);stroke:var(--grys)}
+.ti{font-size:13px;font-weight:500;fill:var(--tx);text-anchor:middle}.su{font-size:11px;fill:var(--mut);text-anchor:middle}
+.pa{fill:none;stroke:var(--ln);stroke-width:1.5;stroke-dasharray:3 5}
+.ring{fill:none;stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:ring .9s ease-out forwards}
+@keyframes ring{from{transform:scale(1);opacity:.9}to{transform:scale(4);opacity:0}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips span{border:1px solid var(--ln);border-radius:999px;padding:2px 10px;font-size:12px;color:var(--mut)}
+.chips b{color:var(--tx);font-weight:500}
+.lg{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--mut);margin-top:6px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+</style></head><body><main>
+<header><h1>Tráfico en vivo · masencarnacion</h1><button id="pb">Pausar</button></header>
+<div class="card">
+<svg id="map" viewBox="0 0 1000 480" role="img" aria-label="Mapa mundial con solicitudes de lectores hacia Encarnación, Paraguay"><g id="land"></g><g id="dots"></g><g id="fx"></g></svg>
+<div class="chips" id="chips"></div>
+</div>
+<div class="card">
+<svg id="ar" viewBox="0 0 1000 370" role="img" aria-label="Flujo de datos: redactor, lectores, Cloudflare, servidor web, S3 y streaming"><g id="pa"></g><g id="nd"></g><g id="fx2"></g></svg>
+<div class="lg"><span><i style="background:#378ADD"></i>Noticias HTML</span><span><i style="background:#1D9E75"></i>Imágenes</span><span><i style="background:#EF9F27"></i>Streaming</span><span><i style="background:#D4537E"></i>Publicación del redactor</span></div>
+</div>
+</main>
+<script>
+const NS='http://www.w3.org/2000/svg',$=i=>document.getElementById(i);
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
+const px=(lo,la)=>[(lo+180)*1000/360,(84-la)*480/144];
+const C={html:'#378ADD',img:'#1D9E75',stream:'#EF9F27',pub:'#D4537E'};
+const LAND=[
+[[-168,66],[-156,71],[-125,70],[-95,72],[-80,68],[-62,60],[-55,50],[-67,44],[-76,35],[-81,26],[-84,30],[-97,26],[-97,20],[-87,21],[-83,10],[-78,8],[-90,14],[-105,20],[-110,24],[-115,31],[-124,40],[-124,48],[-135,58],[-150,60],[-165,60]],
+[[-55,60],[-45,60],[-20,70],[-20,82],[-60,82],[-70,76]],
+[[-78,8],[-72,12],[-62,10],[-50,0],[-35,-6],[-39,-15],[-48,-26],[-58,-38],[-65,-42],[-68,-52],[-72,-52],[-74,-40],[-71,-20],[-81,-5]],
+[[-10,36],[-9,43],[-2,48],[-5,50],[5,52],[8,57],[12,56],[20,60],[28,70],[40,67],[40,55],[30,45],[27,40],[20,38],[15,38],[8,44],[3,43],[-6,36]],
+[[-17,21],[-10,30],[-6,36],[10,37],[20,32],[32,31],[34,28],[43,12],[51,12],[40,-5],[40,-15],[35,-25],[20,-35],[18,-32],[12,-17],[9,-1],[5,5],[-8,4],[-17,14]],
+[[27,41],[36,36],[34,28],[43,12],[52,16],[58,22],[57,25],[67,25],[72,20],[77,8],[80,15],[88,22],[92,20],[98,10],[100,2],[104,1],[109,12],[106,20],[122,30],[122,38],[130,40],[142,46],[140,52],[160,58],[170,60],[180,66],[170,70],[140,72],[110,77],[80,73],[60,70],[40,67],[40,55],[30,46]],
+[[130,32],[135,34],[141,38],[142,44],[140,41],[135,36]],
+[[114,-22],[122,-18],[131,-12],[137,-12],[142,-11],[146,-19],[153,-27],[150,-37],[141,-38],[130,-32],[115,-34]],
+[[-5,50],[1,51],[-2,57],[-5,58],[-6,54]]];
+LAND.forEach(p=>mk('path',{class:'land',d:p.map(([o,a],i)=>(i?'L':'M')+px(o,a).map(v=>v.toFixed(1)).join(' ')).join('')+'Z'},$('land')));
+const CT=[['PY','Paraguay',-23.4,-58.4,40],['AR','Argentina',-34.6,-58.4,14],['BR','Brasil',-23.5,-46.6,12],['ES','España',40.4,-3.7,8],['US','EE.UU.',38.9,-77,7],['CO','Colombia',4.7,-74.1,4],['MX','México',19.4,-99.1,4],['JP','Japón',35.7,139.7,3],
+['CL','Chile',-33.4,-70.6,.7],['UY','Uruguay',-34.9,-56.2,.7],['PE','Perú',-12,-77,.6],['BO','Bolivia',-16.5,-68.1,.6],['GB','Reino Unido',51.5,-.1,.6],['DE','Alemania',52.5,13.4,.6],['FR','Francia',48.9,2.3,.6],['IT','Italia',41.9,12.5,.5],['CA','Canadá',45.4,-75.7,.5],['AU','Australia',-33.9,151.2,.5],['IN','India',28.6,77.2,.6],['CN','China',39.9,116.4,.5],['ZA','Sudáfrica',-26.2,28,.4],['RU','Rusia',55.7,37.6,.4],['NG','Nigeria',6.5,3.4,.4],['EG','Egipto',30,31.2,.4],['TR','Turquía',39.9,32.9,.4],['KR','Corea del Sur',37.5,127,.4],['ID','Indonesia',-6.2,106.8,.4]];
+const TOT=CT.reduce((s,c)=>s+c[4],0),cnt={},HUB=px(-55.87,-27.33);let total=0,hits=0,miss=0;
+CT.forEach(c=>{cnt[c[0]]=0;const[x,y]=px(c[3],c[2]);mk('circle',{cx:x,cy:y,r:2.5+Math.sqrt(c[4])*.7,fill:'#378ADD',opacity:.3},$('dots'));mk('circle',{cx:x,cy:y,r:1.8,fill:'#378ADD'},$('dots'))});
+mk('circle',{cx:HUB[0],cy:HUB[1],r:5,fill:'#D4537E'},$('dots'));
+const hl=mk('text',{x:HUB[0]+10,y:HUB[1]+4,class:'ti',style:'text-anchor:start'},$('dots'));hl.textContent='Encarnación (origen)';
+const pickC=()=>{let r=Math.random()*TOT;for(const c of CT){r-=c[4];if(r<=0)return c}return CT[0]};
+const pickT=()=>{const r=Math.random();return r<.45?'html':r<.85?'img':'stream'};
+const MP=[];
+function spawnMap(){const c=pickC(),j=c[4]>10?2:.8,a=px(c[3]+(Math.random()-.5)*j*2,c[2]+(Math.random()-.5)*j*2),b=HUB,d=Math.hypot(a[0]-b[0],a[1]-b[1]),t=pickT();
+MP.push({c:c[0],t,a,b,k:[(a[0]+b[0])/2,(a[1]+b[1])/2-d*.28],u:0,dur:Math.max(.6,d/360),e:mk('circle',{r:3,fill:C[t]},$('fx')),e2:mk('circle',{r:2,fill:C[t],opacity:.4},$('fx'))})}
+const q=(a,k,b,t)=>{const s=1-t;return[s*s*a[0]+2*s*t*k[0]+t*t*b[0],s*s*a[1]+2*s*t*k[1]+t*t*b[1]]};
+const NODES=[['red',20,20,150,50,'Redactor','Periodista','gry'],['lec',20,100,150,50,'Lectores','Clientes del mundo','gry'],['cf',260,30,170,140,'Cloudflare WAF / CDN','Proxy · nube naranja','cf'],['srv',560,20,180,60,'Servidor web','Apache + PHP · WinterCMS','org'],['s3',560,110,180,60,'Amazon S3','Bucket masencarnacion','org'],['dns',260,230,170,50,'Cloudflare DNS only','Bypass · nube gris','cf'],['tv',560,210,180,60,'Streaming TV','','cf'],['rad',560,290,180,60,'Streaming radio','','cf'],['otv',810,215,160,50,'Operador de TV','RTMP / HLS 24/7','gry'],['orad',810,295,160,50,'Operador de radio','Icecast / Shoutcast','gry']];
+const PD={red_cf:'M170 45L260 70',lec_cf:'M170 125L260 125',cf_srv:'M430 70L560 50',cf_s3:'M430 130L560 140',srv_s3:'M650 80V110',lec_dns:'M95 150V255H258',dns_tv:'M430 255H495V240H560',dns_rad:'M430 255H495V320H560',op_tv:'M810 240H742',op_rad:'M810 320H742'};
+const P={};for(const k in PD){const e=mk('path',{class:'pa',d:PD[k]},$('pa'));P[k]={e,len:e.getTotalLength()}}
+NODES.forEach(([id,x,y,w,h,t,s,c])=>{mk('rect',{class:'box '+c,x,y,width:w,height:h,rx:8},$('nd'));const a=mk('text',{class:'ti',x:x+w/2,y:y+20},$('nd'));a.textContent=t;const b=mk('text',{class:'su',id:'t_'+id,x:x+w/2,y:y+38},$('nd'));b.textContent=s});
+const hitT=mk('text',{class:'su',x:345,y:112},$('nd'));
+const bars={};[['tv',210,300],['rad',290,1000]].forEach(([id,y,m])=>{mk('rect',{x:574,y:y+46,width:152,height:6,rx:3,fill:'var(--ln)'},$('nd'));bars[id]={m,e:mk('rect',{x:574,y:y+46,width:0,height:6,rx:3,fill:'#EF9F27'},$('nd'))}});
+let V={tv:180,rad:620};
+const AP=[];
+function arch(s,c){if(AP.length>140)return;const p={s,i:0,d:0,e:mk('circle',{r:4,fill:c,cx:-9,cy:-9},$('fx2'))};AP.push(p)}
+function flow(t,c){
+if(t==='html'){const h=Math.random()<.7;h?hits++:miss++;arch(h?[['lec_cf'],['lec_cf',1]]:[['lec_cf'],['cf_srv'],['cf_srv',1],['lec_cf',1]],c)}
+else if(t==='img'){const h=Math.random()<.85;h?hits++:miss++;arch(h?[['lec_cf'],['lec_cf',1]]:[['lec_cf'],['cf_s3'],['cf_s3',1],['lec_cf',1]],c)}
+else{const x=Math.random()<.35?'dns_tv':'dns_rad';arch([['lec_dns'],[x],[x,1],['lec_dns',1]],c)}}
+const T={m:0,pub:2,tv:0,rad:0,st:0,chip:0};let paused=matchMedia('(prefers-reduced-motion:reduce)').matches,last=0;
+function step(dt){
+T.m-=dt;while(T.m<=0){spawnMap();T.m+=1/12}
+T.pub-=dt;if(T.pub<=0){arch([['red_cf'],['cf_srv'],['srv_s3']],C.pub);T.pub=3.5+Math.random()*2}
+T.tv-=dt;if(T.tv<=0){arch([['op_tv']],C.stream);T.tv=.35}
+T.rad-=dt;if(T.rad<=0){arch([['op_rad']],C.stream);T.rad=.5}
+for(let i=MP.length-1;i>=0;i--){const m=MP[i];m.u+=dt/m.dur;
+if(m.u>=1){cnt[m.c]++;total++;if(Math.random()<.35)mk('circle',{class:'ring',cx:HUB[0],cy:HUB[1],r:5,stroke:C[m.t]},$('fx')).addEventListener('animationend',function(){this.remove()});if(Math.random()<.5)flow(m.t,C[m.t]);m.e.remove();m.e2.remove();MP.splice(i,1);continue}
+const p=q(m.a,m.k,m.b,m.u),p2=q(m.a,m.k,m.b,Math.max(0,m.u-.06));m.e.setAttribute('cx',p[0]);m.e.setAttribute('cy',p[1]);m.e2.setAttribute('cx',p2[0]);m.e2.setAttribute('cy',p2[1])}
+for(let i=AP.length-1;i>=0;i--){const p=AP[i],g=p.s[p.i],L=P[g[0]].len;p.d+=240*dt;
+if(p.d>=L){p.i++;p.d=0;if(p.i>=p.s.length){p.e.remove();AP.splice(i,1);continue}}
+const g2=p.s[p.i],L2=P[g2[0]].len,pt=P[g2[0]].e.getPointAtLength(g2[1]?L2-p.d:p.d);p.e.setAttribute('cx',pt.x);p.e.setAttribute('cy',pt.y)}
+T.st-=dt;if(T.st<=0){T.st=1;V.tv=Math.min(290,Math.max(120,V.tv+Math.round((Math.random()-.5)*14)));V.rad=Math.min(950,Math.max(400,V.rad+Math.round((Math.random()-.5)*40)));
+for(const k of['tv','rad']){$('t_'+k).textContent=V[k]+' / '+bars[k].m+' simultáneos';bars[k].e.setAttribute('width',152*V[k]/bars[k].m)}
+hitT.textContent='Caché HIT '+(hits+miss?Math.round(100*hits/(hits+miss)):0)+'% · MISS '+(hits+miss?Math.round(100*miss/(hits+miss)):0)+'%'}
+T.chip-=dt;if(T.chip<=0){T.chip=1;$('chips').innerHTML=CT.map(c=>[c[1],cnt[c[0]]]).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([n,v])=>'<span>'+n+' <b>'+(total?(100*v/total).toFixed(0):0)+'%</b></span>').join('')+'<span>Resto del mundo <b>'+(total?(100*(1-CT.slice(0,8).reduce((s,c)=>s+cnt[c[0]],0)/total)).toFixed(0):0)+'%</b></span>'}}
+function loop(t){const dt=Math.min((t-last)/1000||0,.05);last=t;if(!paused)step(dt);requestAnimationFrame(loop)}
+const pb=$('pb');pb.textContent=paused?'Reanudar':'Pausar';pb.onclick=()=>{paused=!paused;pb.textContent=paused?'Reanudar':'Pausar'};
+step(.01);requestAnimationFrame(loop);
+</script></body></html>
